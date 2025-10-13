@@ -1,0 +1,198 @@
+/* 레시피 상세 페이지 스타일 */
+
+/* 좌우 사이드바 광고 */
+.left-sidebar-ad,
+.right-sidebar-ad {
+    position: fixed;
+    top: 200px;
+    width: 160px;
+    z-index: 100;
+}
+
+.left-sidebar-ad {
+    left: 10px;
+}
+
+.right-sidebar-ad {
+    right: 10px;
+}
+
+.ad-box {
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+}
+
+.ad-placeholder-vertical {
+    color: #6c757d;
+}
+
+.ad-placeholder-vertical i {
+    margin-bottom: 10px;
+}
+
+/* 레시피 정보 카드 */
+.recipe-info-card {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.recipe-info-card h5 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ff6b35;
+}
+
+/* 재료 섹션 */
+.ingredients-section {
+    background: #fff8f0;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.ingredients-section h3 {
+    color: #ff6b35;
+    margin-bottom: 20px;
+}
+
+.ingredient-item {
+    padding: 10px;
+    border-bottom: 1px solid #ffe0cc;
+}
+
+.ingredient-item:last-child {
+    border-bottom: none;
+}
+
+/* 조리 순서 섹션 */
+.cooking-steps-section {
+    margin: 30px 0;
+}
+
+.cooking-steps-section h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.cooking-step {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    transition: all 0.3s ease;
+}
+
+.cooking-step:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-color: #ff6b35;
+}
+
+.step-image {
+    flex-shrink: 0;
+    width: 200px;
+    height: 150px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.step-content {
+    flex-grow: 1;
+}
+
+.step-number {
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 10px;
+    font-size: 1.1rem;
+}
+
+.step-text {
+    line-height: 1.8;
+    font-size: 1.05rem;
+    color: #333;
+}
+
+/* 영양 정보 */
+.nutrition-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin: 30px 0;
+}
+
+.nutrition-info h4 {
+    color: white;
+    margin-bottom: 20px;
+}
+
+.nutrition-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.nutrition-item:last-child {
+    border-bottom: none;
+}
+
+/* 관련 상품 & 레시피 */
+.related-section {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    margin: 30px 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.related-section h4 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+/* 광고 배너 */
+.ad-banner-horizontal {
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    margin: 30px 0;
+    color: #6c757d;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    .step-image {
+        width: 150px;
+        height: 112px;
+    }
+    
+    .cooking-step {
+        flex-direction: column;
+    }
+    
+    .step-image {
+        width: 100%;
+        height: 200px;
+    }
+}
