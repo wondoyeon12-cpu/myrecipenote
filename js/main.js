@@ -60,28 +60,11 @@ function loadRecipes() {
     tryLoadRecipes(0);
 }
 
-// API에서 레시피 로드
+// API에서 레시피 로드 (현재 비활성화 - CORS 문제로 인해)
 async function loadAPIRecipes() {
-    try {
-        console.log("🌐 API에서 추가 레시피 로드 중...");
-        const apiRecipes = await apiManager.fetchRecipesFromAPI(20); // 20개 레시피 가져오기
-        
-        if (apiRecipes && apiRecipes.length > 0) {
-            console.log(`✅ API에서 ${apiRecipes.length}개 레시피 로드 완료`);
-            
-            // 기존 레시피와 합치기
-            allRecipes = [...allRecipes, ...apiRecipes];
-            
-            // 화면 업데이트
-            displayRecipes(allRecipes);
-            
-            // 카테고리도 업데이트
-            updateCategories();
-        }
-    } catch (error) {
-        console.log("⚠️ API 레시피 로드 실패:", error);
-        // API 실패해도 로컬 데이터는 계속 사용
-    }
+    console.log("🌐 API 연동은 현재 CORS 문제로 인해 비활성화됨");
+    console.log("📋 로컬 데이터 98개 레시피만 사용 중");
+    // API 호출 대신 로컬 데이터만 사용
 }
 
 // 카테고리 데이터 로드
