@@ -3,19 +3,24 @@
 let currentRecipe = null;
 
 $(document).ready(function() {
+    console.log("🔍 레시피 상세 페이지 로드 시작...");
+    
     const recipeId = getUrlParameter('id');
+    console.log("📋 레시피 ID:", recipeId);
     
     if (!recipeId) {
+        console.log("❌ 레시피 ID가 없습니다.");
         showError('레시피 ID가 없습니다.');
         return;
     }
     
+    console.log("🚀 레시피 상세 정보 로드 시작...");
     loadRecipeDetail(recipeId);
 });
 
 // 레시피 상세 정보 로드
 function loadRecipeDetail(recipeId) {
-    const paths = ['data/recipes.json', './data/recipes.json', '/data/recipes.json'];
+    const paths = ['recipes.json', './recipes.json', '/recipes.json', 'data/recipes.json', './data/recipes.json', '/data/recipes.json'];
     
     function tryLoad(pathIndex) {
         if (pathIndex >= paths.length) {
