@@ -42,7 +42,7 @@ class DynamicRecipeManager {
                 ? recipeData.cooking_steps 
                 : [{ step: 1, text: recipeData.cooking_steps || "" }],
             tips: recipeData.tips || "",
-            image_main: recipeData.image_main || "https://via.placeholder.com/400x200?text=New+Recipe",
+            image_main: recipeData.image_main || "https://picsum.photos/400/200?random=1",
             source: "사용자 추가",
             nutrition: {
                 calories: recipeData.calories || "정보 없음",
@@ -147,8 +147,17 @@ const dynamicRecipeManager = new DynamicRecipeManager();
 async function loadRecipesWithDynamic() {
     console.log("🚀 동적 레시피 시스템 로드 시작...");
     
-    // 로컬 JSON 데이터 로드
-    const localRecipes = await loadLocalRecipes();
+    // 로컬 JSON 데이터 직접 로드
+    let localRecipes = [];
+    try {
+        const response = await fetch('recipes.json');
+        if (response.ok) {
+            localRecipes = await response.json();
+            console.log(`✅ 로컬 레시피 ${localRecipes.length}개 로드 완료`);
+        }
+    } catch (error) {
+        console.log("⚠️ 로컬 레시피 로드 실패:", error);
+    }
     
     // 동적 레시피 로드
     const dynamicRecipes = dynamicRecipeManager.getAllDynamicRecipes();
