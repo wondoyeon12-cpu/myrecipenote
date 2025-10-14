@@ -1,11 +1,13 @@
 // 레시피 데이터 로드
 let allRecipes = [];
 let categories = {};
+let apiManager = new RecipeAPIManager();
 
 // 페이지 로드 시 데이터 가져오기
 $(document).ready(function() {
     loadRecipes();
     loadCategories();
+    loadAPIRecipes(); // API 레시피도 함께 로드
 });
 
 // 레시피 데이터 로드
@@ -56,6 +58,30 @@ function loadRecipes() {
     }
     
     tryLoadRecipes(0);
+}
+
+// API에서 레시피 로드
+async function loadAPIRecipes() {
+    try {
+        console.log("🌐 API에서 추가 레시피 로드 중...");
+        const apiRecipes = await apiManager.fetchRecipesFromAPI(20); // 20개 레시피 가져오기
+        
+        if (apiRecipes && apiRecipes.length > 0) {
+            console.log(`✅ API에서 ${apiRecipes.length}개 레시피 로드 완료`);
+            
+            // 기존 레시피와 합치기
+            allRecipes = [...allRecipes, ...apiRecipes];
+            
+            // 화면 업데이트
+            displayRecipes(allRecipes);
+            
+            // 카테고리도 업데이트
+            updateCategories();
+        }
+    } catch (error) {
+        console.log("⚠️ API 레시피 로드 실패:", error);
+        // API 실패해도 로컬 데이터는 계속 사용
+    }
 }
 
 // 카테고리 데이터 로드
@@ -150,7 +176,7 @@ function displayAllRecipes(filterCategory = null, searchQuery = null) {
 
 // 레시피 카드 HTML 생성
 function createRecipeCard(recipe) {
-    const defaultImage = 'https://via.placeholder.com/400x200?text=Recipe';
+    const defaultImage = 'https://picsum.photos/400/200?random=1';
     const imageUrl = recipe.image_main || defaultImage;
     
     return `
