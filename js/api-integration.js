@@ -2,7 +2,11 @@
 class RecipeAPIManager {
     constructor() {
         this.apiKey = "fee0a951c8d7426aa79e"; // 공공데이터포털 API 키
-        this.baseUrl = "http://apis.data.go.kr/1390802/AgriFood/Recipe/getRecipeList";
+        
+        // 프록시 서버 URL (로컬 Python 서버)
+        this.proxyUrl = "http://localhost:5000/api/recipes";
+        this.proxyUrlAll = "http://localhost:5000/api/recipes/all";
+        
         this.cache = new Map(); // API 응답 캐시
         this.cacheTimeout = 5 * 60 * 1000; // 5분 캐시
         
@@ -227,66 +231,220 @@ class RecipeAPIManager {
         return [];
     }
 
-    // 대량 API 레시피 다운로드 (전체 저장용)
+    // 대량 API 레시피 다운로드 (프록시 서버 사용 - 1000개)
     async downloadAllAPIRecipes() {
-        console.log("📥 API에서 전체 레시피 다운로드 시작...");
+        console.log("📥 프록시 서버를 통한 전체 레시피 다운로드 시작...");
+        console.log("⚠️ 프록시 서버가 실행 중이어야 합니다!");
         
         try {
-            const allRecipes = [];
-            const batchSize = 100; // 한 번에 100개씩
-            let pageNo = 1;
-            let hasMoreData = true;
+            // 프록시 서버의 /api/recipes/all 엔드포인트 사용
+            console.log(`🌐 프록시 서버 호출: ${this.proxyUrlAll}`);
             
-            while (hasMoreData && pageNo <= 10) { // 최대 10페이지 (1000개)
-                console.log(`📄 페이지 ${pageNo} 다운로드 중...`);
-                
-                try {
-                    const batchRecipes = await this.fetchWithJSONP(batchSize, pageNo);
-                    
-                    if (batchRecipes && batchRecipes.response && batchRecipes.response.body && batchRecipes.response.body.items) {
-                        const recipes = batchRecipes.response.body.items.map(item => this.formatRecipeData(item));
-                        allRecipes.push(...recipes);
-                        
-                        console.log(`✅ 페이지 ${pageNo}: ${recipes.length}개 레시피 다운로드`);
-                        
-                        // 다음 페이지가 있는지 확인
-                        if (recipes.length < batchSize) {
-                            hasMoreData = false;
-                        }
-                        pageNo++;
-                        
-                        // API 부하 방지를 위한 딜레이
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                    } else {
-                        hasMoreData = false;
-                    }
-                } catch (error) {
-                    console.warn(`⚠️ 페이지 ${pageNo} 다운로드 실패:`, error);
-                    hasMoreData = false;
-                }
+            const response = await fetch(this.proxyUrlAll);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
-            if (allRecipes.length > 0) {
+            const data = await response.json();
+            
+            if (data.success && data.recipes && data.recipes.length > 0) {
+                const recipes = data.recipes.map(item => this.formatRecipeData(item));
+                
+                console.log(`✅ API에서 ${recipes.length}개 실제 레시피 다운로드 완료`);
+                
                 // 로컬 저장소에 저장
-                this.saveAPIRecipesToLocal(allRecipes);
+                this.saveAPIRecipesToLocal(recipes);
                 
                 // 캐시에도 저장
                 this.cache.set('api_recipes', {
-                    data: allRecipes,
+                    data: recipes,
                     timestamp: Date.now()
                 });
                 
-                console.log(`🎉 전체 다운로드 완료: ${allRecipes.length}개 레시피`);
-                return allRecipes;
+                console.log(`🎉 전체 다운로드 완료: ${recipes.length}개 레시피`);
+                console.log(`💾 로컬 저장소에 저장 완료`);
+                
+                return recipes;
             } else {
-                console.warn("⚠️ 다운로드된 레시피가 없습니다.");
+                console.error("❌ API 응답에 레시피 데이터가 없습니다.");
+                console.log("💡 프록시 서버를 확인하세요: python api_proxy_server.py");
                 return [];
             }
             
         } catch (error) {
-            console.error("❌ 전체 API 레시피 다운로드 실패:", error);
+            console.error("❌ 전체 레시피 다운로드 실패:", error.message);
+            console.log("");
+            console.log("🔧 프록시 서버 실행 방법:");
+            console.log("1. 새 터미널 열기");
+            console.log("2. 명령어 실행: python api_proxy_server.py");
+            console.log("3. 서버가 실행되면 다시 시도");
+            console.log("");
             return [];
         }
+    }
+
+    // API 호출 시도 (프록시 서버 사용)
+    async tryAPICall() {
+        try {
+            console.log("🌐 프록시 서버를 통한 API 호출 시도 중...");
+            
+            const response = await fetch(`${this.proxyUrl}?pageSize=100&pageNo=1`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // API 응답 형식 확인
+            if (data.Grid_20171128000000000572_1 && data.Grid_20171128000000000572_1.row) {
+                const recipes = data.Grid_20171128000000000572_1.row.map(item => this.formatRecipeData(item));
+                console.log(`✅ API에서 ${recipes.length}개 레시피 수집 성공`);
+                return recipes;
+            } else {
+                console.warn("⚠️ API 응답 형식이 예상과 다름");
+                return [];
+            }
+            
+        } catch (error) {
+            console.log("⚠️ API 호출 실패:", error.message);
+            console.log("💡 프록시 서버가 실행 중인지 확인하세요: python api_proxy_server.py");
+            return [];
+        }
+    }
+
+    // 웹페이지에서 레시피 크롤링
+    async crawlWebpageRecipes() {
+        try {
+            console.log("🕷️ 웹페이지 레시피 크롤링 중...");
+            const recipes = [];
+            
+            // 현재 페이지의 레시피 카드들 수집
+            const recipeCards = document.querySelectorAll('.recipe-card, .card, [data-recipe-id]');
+            console.log(`📋 발견된 레시피 카드: ${recipeCards.length}개`);
+            
+            recipeCards.forEach((card, index) => {
+                try {
+                    const recipe = this.extractRecipeFromCard(card, index);
+                    if (recipe) {
+                        recipes.push(recipe);
+                    }
+                } catch (error) {
+                    console.warn(`⚠️ 카드 ${index} 파싱 실패:`, error);
+                }
+            });
+            
+            // 전역 변수에서 레시피 데이터 수집
+            if (typeof allRecipes !== 'undefined' && allRecipes.length > 0) {
+                console.log(`📋 전역 레시피 데이터: ${allRecipes.length}개`);
+                recipes.push(...allRecipes.map(recipe => ({
+                    ...recipe,
+                    id: `crawled_${recipe.id}`,
+                    source: '웹페이지 크롤링'
+                })));
+            }
+            
+            return recipes;
+        } catch (error) {
+            console.error("❌ 웹페이지 크롤링 실패:", error);
+            return [];
+        }
+    }
+
+    // 카드에서 레시피 정보 추출
+    extractRecipeFromCard(card, index) {
+        try {
+            const titleElement = card.querySelector('h3, h4, h5, .recipe-title, .card-title');
+            const imageElement = card.querySelector('img');
+            const categoryElement = card.querySelector('.category, .badge, [data-category]');
+            
+            const title = titleElement ? titleElement.textContent.trim() : `레시피 ${index + 1}`;
+            const image = imageElement ? imageElement.src : `https://picsum.photos/400/200?random=${index}`;
+            const category = categoryElement ? categoryElement.textContent.trim() : '기타';
+            
+            return {
+                id: `crawled_${Date.now()}_${index}`,
+                name: title,
+                category: category,
+                cooking_time: '30분',
+                difficulty: '초급',
+                servings: '2인분',
+                ingredients: ['재료 정보', '상세 정보 필요'],
+                cooking_steps: [
+                    { step: 1, text: '상세 조리 과정은 레시피 상세 페이지에서 확인하세요.', image: null }
+                ],
+                tips: '웹페이지에서 크롤링된 레시피입니다.',
+                image_main: image,
+                source: '웹페이지 크롤링',
+                nutrition: { calories: '정보 없음', protein: '정보 없음', fat: '정보 없음' }
+            };
+        } catch (error) {
+            console.warn(`카드 ${index} 추출 실패:`, error);
+            return null;
+        }
+    }
+
+    // 확장된 목업 데이터 생성
+    generateExtendedMockRecipes(count) {
+        const baseRecipes = [
+            { name: "🍲 된장찌개", category: "국&찌개", time: "20분", difficulty: "초급" },
+            { name: "🥘 김치찌개", category: "국&찌개", time: "25분", difficulty: "초급" },
+            { name: "🍖 불고기", category: "일품", time: "30분", difficulty: "중급" },
+            { name: "🍜 라면", category: "일품", time: "10분", difficulty: "초급" },
+            { name: "🍱 비빔밥", category: "밥", time: "25분", difficulty: "초급" },
+            { name: "🥗 나물무침", category: "반찬", time: "15분", difficulty: "초급" },
+            { name: "🍰 초코케이크", category: "후식", time: "60분", difficulty: "고급" },
+            { name: "🍳 계란말이", category: "반찬", time: "15분", difficulty: "초급" },
+            { name: "🥩 갈비찜", category: "일품", time: "90분", difficulty: "고급" },
+            { name: "🍤 새우튀김", category: "일품", time: "30분", difficulty: "중급" },
+            { name: "🥬 시금치나물", category: "반찬", time: "10분", difficulty: "초급" },
+            { name: "🍚 김치볶음밥", category: "밥", time: "20분", difficulty: "초급" },
+            { name: "🍲 순두부찌개", category: "국&찌개", time: "25분", difficulty: "초급" },
+            { name: "🍗 치킨", category: "일품", time: "45분", difficulty: "중급" },
+            { name: "🍰 티라미수", category: "후식", time: "120분", difficulty: "고급" }
+        ];
+        
+        const recipes = [];
+        for (let i = 0; i < count; i++) {
+            const base = baseRecipes[i % baseRecipes.length];
+            const recipe = {
+                id: `extended_mock_${Date.now()}_${i}`,
+                name: `${base.name} ${Math.floor(i / baseRecipes.length) + 1}`,
+                category: base.category,
+                cooking_time: base.time,
+                difficulty: base.difficulty,
+                servings: "2인분",
+                ingredients: [`${base.name} 재료`, "추가 재료", "양념"],
+                cooking_steps: [
+                    { step: 1, text: `${base.name} 만들기 1단계`, image: null },
+                    { step: 2, text: `${base.name} 만들기 2단계`, image: null },
+                    { step: 3, text: `${base.name} 완성하기`, image: null }
+                ],
+                tips: `${base.name} 맛있게 만드는 팁입니다.`,
+                image_main: `https://picsum.photos/400/200?random=${i + 100}`,
+                source: '확장 목업 데이터',
+                nutrition: { calories: '200kcal', protein: '10g', fat: '8g' }
+            };
+            recipes.push(recipe);
+        }
+        return recipes;
+    }
+
+    // 중복 레시피 제거
+    removeDuplicateRecipes(recipes) {
+        const uniqueRecipes = [];
+        const seenNames = new Set();
+        
+        recipes.forEach(recipe => {
+            if (!seenNames.has(recipe.name)) {
+                seenNames.add(recipe.name);
+                uniqueRecipes.push(recipe);
+            }
+        });
+        
+        console.log(`🔄 중복 제거: ${recipes.length}개 → ${uniqueRecipes.length}개`);
+        return uniqueRecipes;
     }
 
     // JSONP 호출 (페이지 번호 지원)
