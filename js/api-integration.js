@@ -5,6 +5,13 @@ class RecipeAPIManager {
         this.baseUrl = "http://apis.data.go.kr/1390802/AgriFood/Recipe/getRecipeList";
         this.cache = new Map(); // API 응답 캐시
         this.cacheTimeout = 5 * 60 * 1000; // 5분 캐시
+        
+        // 로컬 저장소 키들
+        this.localStorageKeys = {
+            apiRecipes: 'api_recipes_local',
+            lastUpdate: 'api_recipes_last_update',
+            totalCount: 'api_recipes_total_count'
+        };
     }
 
     // API에서 레시피 목록 가져오기 (JSONP 방식)
@@ -38,46 +45,6 @@ class RecipeAPIManager {
         }
     }
 
-    // JSONP 방식으로 API 호출
-    fetchWithJSONP(pageSize) {
-        return new Promise((resolve, reject) => {
-            const callbackName = `jsonp_callback_${Date.now()}`;
-            const script = document.createElement('script');
-            
-            const url = new URL(this.baseUrl);
-            url.searchParams.set('serviceKey', this.apiKey);
-            url.searchParams.set('pageNo', 1);
-            url.searchParams.set('numOfRows', pageSize);
-            url.searchParams.set('type', 'json');
-            url.searchParams.set('callback', callbackName);
-            
-            // 글로벌 콜백 함수 설정
-            window[callbackName] = (data) => {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                resolve(data);
-            };
-            
-            // 에러 처리
-            script.onerror = () => {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                reject(new Error('JSONP request failed'));
-            };
-            
-            // 타임아웃 설정 (10초)
-            setTimeout(() => {
-                if (window[callbackName]) {
-                    document.head.removeChild(script);
-                    delete window[callbackName];
-                    reject(new Error('JSONP request timeout'));
-                }
-            }, 10000);
-            
-            script.src = url.toString();
-            document.head.appendChild(script);
-        });
-    }
 
     // 목업 데이터 생성 (API 연결 실패 시 사용)
     getMockRecipes(count = 20) {
@@ -220,6 +187,149 @@ class RecipeAPIManager {
         return result;
     }
 
+    // API 레시피를 로컬 저장소에 저장
+    saveAPIRecipesToLocal(recipes) {
+        try {
+            const data = {
+                recipes: recipes,
+                timestamp: Date.now(),
+                count: recipes.length,
+                source: 'API'
+            };
+            
+            localStorage.setItem(this.localStorageKeys.apiRecipes, JSON.stringify(data));
+            localStorage.setItem(this.localStorageKeys.lastUpdate, Date.now().toString());
+            localStorage.setItem(this.localStorageKeys.totalCount, recipes.length.toString());
+            
+            console.log(`💾 API 레시피 ${recipes.length}개를 로컬 저장소에 저장했습니다.`);
+            return true;
+        } catch (error) {
+            console.error("❌ 로컬 저장소 저장 실패:", error);
+            return false;
+        }
+    }
+
+    // 로컬 저장소에서 API 레시피 불러오기
+    loadAPIRecipesFromLocal() {
+        try {
+            const saved = localStorage.getItem(this.localStorageKeys.apiRecipes);
+            if (saved) {
+                const data = JSON.parse(saved);
+                const lastUpdate = localStorage.getItem(this.localStorageKeys.lastUpdate);
+                const daysSinceUpdate = (Date.now() - parseInt(lastUpdate)) / (1000 * 60 * 60 * 24);
+                
+                console.log(`📂 로컬 저장소에서 ${data.count}개 API 레시피 로드 (${daysSinceUpdate.toFixed(1)}일 전 저장)`);
+                return data.recipes;
+            }
+        } catch (error) {
+            console.warn("⚠️ 로컬 저장소에서 API 레시피 로드 실패:", error);
+        }
+        return [];
+    }
+
+    // 대량 API 레시피 다운로드 (전체 저장용)
+    async downloadAllAPIRecipes() {
+        console.log("📥 API에서 전체 레시피 다운로드 시작...");
+        
+        try {
+            const allRecipes = [];
+            const batchSize = 100; // 한 번에 100개씩
+            let pageNo = 1;
+            let hasMoreData = true;
+            
+            while (hasMoreData && pageNo <= 10) { // 최대 10페이지 (1000개)
+                console.log(`📄 페이지 ${pageNo} 다운로드 중...`);
+                
+                try {
+                    const batchRecipes = await this.fetchWithJSONP(batchSize, pageNo);
+                    
+                    if (batchRecipes && batchRecipes.response && batchRecipes.response.body && batchRecipes.response.body.items) {
+                        const recipes = batchRecipes.response.body.items.map(item => this.formatRecipeData(item));
+                        allRecipes.push(...recipes);
+                        
+                        console.log(`✅ 페이지 ${pageNo}: ${recipes.length}개 레시피 다운로드`);
+                        
+                        // 다음 페이지가 있는지 확인
+                        if (recipes.length < batchSize) {
+                            hasMoreData = false;
+                        }
+                        pageNo++;
+                        
+                        // API 부하 방지를 위한 딜레이
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    } else {
+                        hasMoreData = false;
+                    }
+                } catch (error) {
+                    console.warn(`⚠️ 페이지 ${pageNo} 다운로드 실패:`, error);
+                    hasMoreData = false;
+                }
+            }
+            
+            if (allRecipes.length > 0) {
+                // 로컬 저장소에 저장
+                this.saveAPIRecipesToLocal(allRecipes);
+                
+                // 캐시에도 저장
+                this.cache.set('api_recipes', {
+                    data: allRecipes,
+                    timestamp: Date.now()
+                });
+                
+                console.log(`🎉 전체 다운로드 완료: ${allRecipes.length}개 레시피`);
+                return allRecipes;
+            } else {
+                console.warn("⚠️ 다운로드된 레시피가 없습니다.");
+                return [];
+            }
+            
+        } catch (error) {
+            console.error("❌ 전체 API 레시피 다운로드 실패:", error);
+            return [];
+        }
+    }
+
+    // JSONP 호출 (페이지 번호 지원)
+    fetchWithJSONP(pageSize, pageNo = 1) {
+        return new Promise((resolve, reject) => {
+            const callbackName = `jsonp_callback_${Date.now()}`;
+            const script = document.createElement('script');
+            
+            const url = new URL(this.baseUrl);
+            url.searchParams.set('serviceKey', this.apiKey);
+            url.searchParams.set('pageNo', pageNo);
+            url.searchParams.set('numOfRows', pageSize);
+            url.searchParams.set('type', 'json');
+            url.searchParams.set('callback', callbackName);
+            
+            // 글로벌 콜백 함수 설정
+            window[callbackName] = (data) => {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                resolve(data);
+            };
+            
+            // 에러 처리
+            script.onerror = () => {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                reject(new Error('JSONP request failed'));
+            };
+            
+            // 타임아웃 설정 (15초)
+            setTimeout(() => {
+                if (window[callbackName]) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    reject(new Error('JSONP request timeout'));
+                }
+            }, 15000);
+            
+            script.src = url.toString();
+            document.head.appendChild(script);
+        });
+    }
+
     // API 데이터를 웹사이트 형식으로 변환
     formatRecipeData(item) {
         return {
@@ -272,30 +382,40 @@ class RecipeAPIManager {
         return null;
     }
 
-    // 로컬 데이터와 API 데이터 통합 (스케줄러 연동)
+    // 로컬 저장소 데이터만 사용 (API 연결 없음)
     async getCombinedRecipes(localRecipes = [], apiPageSize = 100) {
         try {
-            // API에서 더 많은 데이터 가져오기 (스케줄링을 위해)
-            const cachedApiRecipes = this.getCachedData('api_recipes');
-            let apiRecipes = [];
+            console.log("📂 로컬 저장소에서만 레시피 로드 (API 연결 없음)");
             
-            if (cachedApiRecipes) {
-                console.log("📦 캐시에서 API 레시피 로드");
-                apiRecipes = cachedApiRecipes;
-            } else {
-                console.log("🌐 API에서 레시피 대량 로드 (스케줄링용)");
-                apiRecipes = await this.fetchRecipesFromAPI(apiPageSize);
-            }
+            // 로컬 저장소에서만 데이터 가져오기
+            const localApiRecipes = this.loadAPIRecipesFromLocal();
             
-            // 스케줄러를 통해 점진적 업데이트 적용
-            if (typeof contentScheduler !== 'undefined') {
-                console.log("📅 스케줄러를 통한 점진적 업데이트 적용");
-                return await contentScheduler.scheduleRecipeUpdates(apiRecipes, localRecipes);
+            if (localApiRecipes.length > 0) {
+                console.log(`✅ 로컬 저장소에서 ${localApiRecipes.length}개 API 레시피 로드`);
+                
+                // 스케줄러를 통해 점진적 업데이트 적용
+                if (typeof contentScheduler !== 'undefined') {
+                    console.log("📅 스케줄러를 통한 점진적 업데이트 적용");
+                    return await contentScheduler.scheduleRecipeUpdates(localApiRecipes, localRecipes);
+                } else {
+                    // 스케줄러가 없는 경우 기존 방식 사용
+                    const localRecipeNames = new Set(localRecipes.map(r => r.name));
+                    const uniqueApiRecipes = localApiRecipes.filter(r => !localRecipeNames.has(r.name));
+                    return [...localRecipes, ...uniqueApiRecipes.slice(0, 20)]; // 최대 20개만
+                }
             } else {
-                // 스케줄러가 없는 경우 기존 방식 사용
-                const localRecipeNames = new Set(localRecipes.map(r => r.name));
-                const uniqueApiRecipes = apiRecipes.filter(r => !localRecipeNames.has(r.name));
-                return [...localRecipes, ...uniqueApiRecipes.slice(0, 20)]; // 최대 20개만
+                console.log("⚠️ 로컬 저장소에 API 레시피가 없습니다.");
+                console.log("💡 'testSchedule.downloadAll()' 명령으로 먼저 다운로드하세요.");
+                
+                // 로컬 저장소에 데이터가 없으면 목업 데이터 사용
+                const mockRecipes = this.getMockRecipes(10);
+                console.log(`🔄 목업 데이터 ${mockRecipes.length}개로 대체`);
+                
+                if (typeof contentScheduler !== 'undefined') {
+                    return await contentScheduler.scheduleRecipeUpdates(mockRecipes, localRecipes);
+                } else {
+                    return [...localRecipes, ...mockRecipes];
+                }
             }
             
         } catch (error) {
@@ -304,15 +424,16 @@ class RecipeAPIManager {
         }
     }
 
-    // API 상태 확인
-    async checkAPIStatus() {
-        try {
-            const testRecipes = await this.fetchRecipesFromAPI(1);
-            const isRealAPI = testRecipes.length > 0 && !testRecipes[0].source.includes('목업');
-            console.log(`📡 API 상태: ${isRealAPI ? '실제 API 연결됨' : '목업 데이터 사용'}`);
-            return testRecipes.length > 0; // 목업 데이터라도 있으면 성공으로 처리
-        } catch (error) {
-            console.error("API 상태 확인 실패:", error);
+    // 로컬 저장소 상태 확인 (API 연결 없음)
+    checkAPIStatus() {
+        const localRecipes = this.loadAPIRecipesFromLocal();
+        const hasLocalData = localRecipes.length > 0;
+        
+        if (hasLocalData) {
+            console.log(`📂 로컬 저장소: ${localRecipes.length}개 레시피 사용 가능`);
+            return true;
+        } else {
+            console.log("⚠️ 로컬 저장소에 레시피가 없습니다. 먼저 다운로드하세요.");
             return false;
         }
     }
