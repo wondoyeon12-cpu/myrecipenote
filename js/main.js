@@ -282,20 +282,20 @@ function getUrlParameter(name) {
     return urlParams.get(name);
 }
 
-// API 연동 레시피 로드 (조리식품 레시피 DB)
+// 로컬 저장소 기반 레시피 로드 (API 연결 없음)
 async function loadRecipesWithAPI() {
-    console.log("🚀 조리식품 레시피 DB API 연동 시작...");
+    console.log("🚀 로컬 저장소 기반 레시피 로드 시작...");
     
     try {
-        // API 상태 확인
-        const apiStatus = await recipeAPIManager.checkAPIStatus();
-        console.log(`📡 API 상태: ${apiStatus ? '연결됨' : '연결 실패'}`);
+        // 로컬 저장소 상태 확인
+        const localStatus = recipeAPIManager.checkAPIStatus();
+        console.log(`📂 로컬 저장소 상태: ${localStatus ? '데이터 있음' : '데이터 없음'}`);
         
-        if (apiStatus) {
-            // API 데이터와 통합
-            const combinedRecipes = await recipeAPIManager.getCombinedRecipes(allRecipes, 20);
+        if (localStatus) {
+            // 로컬 저장소 데이터와 통합
+            const combinedRecipes = await recipeAPIManager.getCombinedRecipes(allRecipes, 1000);
             allRecipes = combinedRecipes;
-            console.log(`✅ API 연동 완료: 총 ${allRecipes.length}개 레시피`);
+            console.log(`✅ 로컬 저장소 연동 완료: 총 ${allRecipes.length}개 레시피`);
             
             // UI 업데이트
             if ($('#popularRecipes').length) {
@@ -306,33 +306,37 @@ async function loadRecipesWithAPI() {
                 displayAllRecipes();
             }
         } else {
-            console.log("📦 API 연결 실패, 기존 데이터만 사용");
+            console.log("📦 로컬 저장소에 데이터 없음, 기존 데이터만 사용");
         }
         
-        // API 상태 표시 업데이트
-        updateAPIStatus(apiStatus);
+        // 상태 표시 업데이트
+        updateAPIStatus(localStatus);
         
     } catch (error) {
-        console.error("❌ API 연동 실패:", error);
+        console.error("❌ 로컬 저장소 연동 실패:", error);
     }
 }
 
-// API 상태 표시 업데이트
-function updateAPIStatus(isConnected) {
+// 로컬 저장소 상태 표시 업데이트
+function updateAPIStatus(hasLocalData) {
     let statusElement = document.getElementById('apiStatus');
     if (!statusElement) {
-        // API 상태 표시 요소가 없으면 생성
+        // 상태 표시 요소가 없으면 생성
         const statusHtml = `
             <div class="text-center mb-3">
-                <span id="apiStatus" class="badge bg-${isConnected ? 'success' : 'warning'}">
-                    <i class="fas fa-wifi"></i> 
-                    ${isConnected ? '조리식품 레시피 DB API 연결됨' : 'API 연결 안됨 (로컬 데이터만 사용)'}
+                <span id="apiStatus" class="badge bg-${hasLocalData ? 'success' : 'warning'}">
+                    <i class="fas fa-database"></i> 
+                    ${hasLocalData ? '로컬 저장소에서 레시피 로드됨' : '로컬 저장소에 데이터 없음'}
                 </span>
-                ${isConnected ? `
-                    <button class="btn btn-outline-primary btn-sm ms-2" onclick="refreshAPIRecipes()">
-                        <i class="fas fa-sync-alt"></i> API 새로고침
+                ${!hasLocalData ? `
+                    <button class="btn btn-outline-primary btn-sm ms-2" onclick="testSchedule.downloadAll()">
+                        <i class="fas fa-download"></i> 전체 다운로드
                     </button>
-                ` : ''}
+                ` : `
+                    <button class="btn btn-outline-secondary btn-sm ms-2" onclick="testSchedule.checkLocalStorage()">
+                        <i class="fas fa-info-circle"></i> 저장소 상태
+                    </button>
+                `}
             </div>
         `;
         
@@ -340,17 +344,17 @@ function updateAPIStatus(isConnected) {
             $('#popularRecipes').before(statusHtml);
         }
     } else {
-        statusElement.className = `badge bg-${isConnected ? 'success' : 'warning'}`;
+        statusElement.className = `badge bg-${hasLocalData ? 'success' : 'warning'}`;
         statusElement.innerHTML = `
-            <i class="fas fa-wifi"></i> 
-            ${isConnected ? '조리식품 레시피 DB API 연결됨' : 'API 연결 안됨 (로컬 데이터만 사용)'}
+            <i class="fas fa-database"></i> 
+            ${hasLocalData ? '로컬 저장소에서 레시피 로드됨' : '로컬 저장소에 데이터 없음'}
         `;
     }
 }
 
-// API 데이터 새로고침
+// 로컬 저장소 데이터 새로고침
 async function refreshAPIRecipes() {
-    console.log("🔄 조리식품 레시피 DB API 데이터 새로고침 중...");
+    console.log("🔄 로컬 저장소 데이터 새로고침 중...");
     
     // 캐시 클리어
     recipeAPIManager.cache.clear();
@@ -358,7 +362,7 @@ async function refreshAPIRecipes() {
     // 새로 로드
     await loadRecipesWithAPI();
     
-    console.log("✅ API 데이터 새로고침 완료");
+    console.log("✅ 로컬 저장소 데이터 새로고침 완료");
 }
 
 // 스케줄 테스트 함수들 (개발자 콘솔에서 사용)
@@ -389,6 +393,50 @@ window.testSchedule = {
             displayedCount: progress ? progress.totalDisplayedCount : 0,
             displayedIds: Array.from(contentScheduler.displayedRecipeIds)
         });
+    },
+    
+    // 전체 API 레시피 다운로드
+    downloadAll: async function() {
+        console.log("📥 전체 API 레시피 다운로드 시작...");
+        try {
+            const recipes = await recipeAPIManager.downloadAllAPIRecipes();
+            console.log(`✅ 다운로드 완료: ${recipes.length}개 레시피`);
+            
+            // 페이지 새로고침하여 새 데이터 반영
+            console.log("🔄 페이지를 새로고침하여 새 데이터를 반영합니다...");
+            setTimeout(() => window.location.reload(), 2000);
+            
+            return recipes;
+        } catch (error) {
+            console.error("❌ 다운로드 실패:", error);
+        }
+    },
+    
+    // 로컬 저장소 상태 확인
+    checkLocalStorage: function() {
+        const localRecipes = recipeAPIManager.loadAPIRecipesFromLocal();
+        const lastUpdate = localStorage.getItem('api_recipes_last_update');
+        const totalCount = localStorage.getItem('api_recipes_total_count');
+        
+        console.log("💾 로컬 저장소 상태:", {
+            storedRecipes: localRecipes.length,
+            totalCount: totalCount,
+            lastUpdate: lastUpdate ? new Date(parseInt(lastUpdate)).toLocaleString('ko-KR') : '없음'
+        });
+        
+        return {
+            count: localRecipes.length,
+            lastUpdate: lastUpdate,
+            recipes: localRecipes
+        };
+    },
+    
+    // 로컬 저장소 초기화
+    clearLocalStorage: function() {
+        localStorage.removeItem('api_recipes_local');
+        localStorage.removeItem('api_recipes_last_update');
+        localStorage.removeItem('api_recipes_total_count');
+        console.log("🗑️ 로컬 저장소가 초기화되었습니다.");
     }
 };
 
