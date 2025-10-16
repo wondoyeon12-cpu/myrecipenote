@@ -67,7 +67,7 @@ async function loadAPIRecipes() {
     // API 호출 대신 로컬 데이터만 사용
 }
 
-// 카테고리 데이터 로드
+// 카테고리 데이터 로드 (기본 카테고리 포함)
 function loadCategories() {
     const paths = [
         'categories.json',
@@ -81,8 +81,19 @@ function loadCategories() {
     
     function tryLoadCategories(pathIndex) {
         if (pathIndex >= paths.length) {
-            console.error('❌ 카테고리 데이터 로드 실패');
-            console.log('⚠️ 시도한 경로:', paths);
+            console.log('⚠️ 카테고리 파일을 찾을 수 없음, 기본 카테고리 사용');
+            // 기본 카테고리 설정
+            categories = {
+                "모두보기": { name: "모두보기", count: 0, color: "#ff6b35" },
+                "밥": { name: "밥", count: 0, color: "#f7931e" },
+                "국&찌개": { name: "국&찌개", count: 0, color: "#ffd23f" },
+                "반찬": { name: "반찬", count: 0, color: "#27ae60" },
+                "일품": { name: "일품", count: 0, color: "#3498db" },
+                "후식": { name: "후식", count: 0, color: "#9b59b6" }
+            };
+            console.log(`✅ ${Object.keys(categories).length}개 기본 카테고리 로드 완료`);
+            console.log('📋 카테고리:', Object.keys(categories));
+            displayCategories();
             return;
         }
         
