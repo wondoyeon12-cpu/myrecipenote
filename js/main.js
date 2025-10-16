@@ -73,6 +73,7 @@ function loadCategories() {
         'categories.json',
         './categories.json',
         '/categories.json',
+        '/myrecipenote/categories.json',
         'data/categories.json',
         './data/categories.json',
         '/data/categories.json'
@@ -81,16 +82,20 @@ function loadCategories() {
     function tryLoadCategories(pathIndex) {
         if (pathIndex >= paths.length) {
             console.error('❌ 카테고리 데이터 로드 실패');
+            console.log('⚠️ 시도한 경로:', paths);
             return;
         }
         
         const path = paths[pathIndex];
+        console.log(`🔍 카테고리 시도 중: ${path}`);
         
         $.getJSON(path, function(data) {
             categories = data;
             console.log(`✅ ${Object.keys(categories).length}개 카테고리 로드 완료`);
+            console.log('📋 카테고리:', Object.keys(data));
             displayCategories();
-        }).fail(function() {
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.log(`❌ ${path} 로드 실패: ${textStatus}`);
             tryLoadCategories(pathIndex + 1);
         });
     }
@@ -276,3 +281,127 @@ function getUrlParameter(name) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(name);
 }
+
+// API 연동 레시피 로드 (조리식품 레시피 DB)
+async function loadRecipesWithAPI() {
+    console.log("🚀 조리식품 레시피 DB API 연동 시작...");
+    
+    try {
+        // API 상태 확인
+        const apiStatus = await recipeAPIManager.checkAPIStatus();
+        console.log(`📡 API 상태: ${apiStatus ? '연결됨' : '연결 실패'}`);
+        
+        if (apiStatus) {
+            // API 데이터와 통합
+            const combinedRecipes = await recipeAPIManager.getCombinedRecipes(allRecipes, 20);
+            allRecipes = combinedRecipes;
+            console.log(`✅ API 연동 완료: 총 ${allRecipes.length}개 레시피`);
+            
+            // UI 업데이트
+            if ($('#popularRecipes').length) {
+                displayPopularRecipes();
+            }
+            
+            if ($('#recipeList').length) {
+                displayAllRecipes();
+            }
+        } else {
+            console.log("📦 API 연결 실패, 기존 데이터만 사용");
+        }
+        
+        // API 상태 표시 업데이트
+        updateAPIStatus(apiStatus);
+        
+    } catch (error) {
+        console.error("❌ API 연동 실패:", error);
+    }
+}
+
+// API 상태 표시 업데이트
+function updateAPIStatus(isConnected) {
+    let statusElement = document.getElementById('apiStatus');
+    if (!statusElement) {
+        // API 상태 표시 요소가 없으면 생성
+        const statusHtml = `
+            <div class="text-center mb-3">
+                <span id="apiStatus" class="badge bg-${isConnected ? 'success' : 'warning'}">
+                    <i class="fas fa-wifi"></i> 
+                    ${isConnected ? '조리식품 레시피 DB API 연결됨' : 'API 연결 안됨 (로컬 데이터만 사용)'}
+                </span>
+                ${isConnected ? `
+                    <button class="btn btn-outline-primary btn-sm ms-2" onclick="refreshAPIRecipes()">
+                        <i class="fas fa-sync-alt"></i> API 새로고침
+                    </button>
+                ` : ''}
+            </div>
+        `;
+        
+        if ($('#popularRecipes').length) {
+            $('#popularRecipes').before(statusHtml);
+        }
+    } else {
+        statusElement.className = `badge bg-${isConnected ? 'success' : 'warning'}`;
+        statusElement.innerHTML = `
+            <i class="fas fa-wifi"></i> 
+            ${isConnected ? '조리식품 레시피 DB API 연결됨' : 'API 연결 안됨 (로컬 데이터만 사용)'}
+        `;
+    }
+}
+
+// API 데이터 새로고침
+async function refreshAPIRecipes() {
+    console.log("🔄 조리식품 레시피 DB API 데이터 새로고침 중...");
+    
+    // 캐시 클리어
+    recipeAPIManager.cache.clear();
+    
+    // 새로 로드
+    await loadRecipesWithAPI();
+    
+    console.log("✅ API 데이터 새로고침 완료");
+}
+
+// 스케줄 테스트 함수들 (개발자 콘솔에서 사용)
+window.testSchedule = {
+    // 스케줄 리셋
+    reset: function() {
+        contentScheduler.resetSchedule();
+        console.log("🔄 스케줄이 리셋되었습니다. 페이지를 새로고침하세요.");
+    },
+    
+    // 수동으로 레시피 추가
+    addRecipes: function(count = 2) {
+        const apiRecipes = recipeAPIManager.getCachedData('api_recipes') || [];
+        const newRecipes = contentScheduler.forceAddRecipes(apiRecipes, count);
+        console.log(`🔧 ${newRecipes.length}개 레시피가 수동으로 추가되었습니다.`);
+        return newRecipes;
+    },
+    
+    // 현재 상태 확인
+    status: function() {
+        const todayCount = contentScheduler.getTodayRecipeCount();
+        const nextUpdate = contentScheduler.getNextUpdateDate();
+        const progress = contentScheduler.loadProgress();
+        
+        console.log("📊 스케줄 상태:", {
+            todayRecipeCount: todayCount,
+            nextUpdateDate: nextUpdate.toLocaleString('ko-KR'),
+            displayedCount: progress ? progress.totalDisplayedCount : 0,
+            displayedIds: Array.from(contentScheduler.displayedRecipeIds)
+        });
+    }
+};
+
+// 페이지 로드 시 API 연동 초기화
+$(document).ready(function() {
+    console.log("🔌 조리식품 레시피 DB API 연동 초기화...");
+    
+    // 기존 레시피 로드 후 API 연동 시도
+    setTimeout(async () => {
+        if (allRecipes && allRecipes.length > 0) {
+            await loadRecipesWithAPI();
+        } else {
+            console.log("⚠️ 로컬 레시피가 먼저 로드되지 않음, API 연동 건너뜀");
+        }
+    }, 1000); // 1초 후 실행
+});
