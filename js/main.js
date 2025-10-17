@@ -97,6 +97,13 @@ function displayPopularRecipes() {
     });
     
     $('#popularRecipes').html(html);
+    
+    // 더보기 버튼 표시/숨김 처리
+    if (allRecipes.length > 8) {
+        $('#loadMoreButton').show();
+    } else {
+        $('#loadMoreButton').hide();
+    }
 }
 
 // 전체 레시피 표시 (레시피 목록 페이지)
@@ -252,6 +259,14 @@ function filterRecipesByCategory(category) {
     });
     
     $('#popularRecipes').html(html);
+    
+    // 더보기 버튼 표시/숨김 처리
+    if (filteredRecipes.length > 8) {
+        $('#loadMoreButton').show();
+    } else {
+        $('#loadMoreButton').hide();
+    }
+    
     console.log(`✅ ${category} 카테고리: ${recipes.length}개 레시피 표시`);
 }
 
