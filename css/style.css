@@ -21,6 +21,35 @@ body {
     font-weight: bold;
     font-size: 1.5rem;
     color: white !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.navbar-brand i {
+    font-size: 1.8rem;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+    justify-content: center;
+}
+
+.brand-subtitle {
+    font-size: 1rem;
+    font-weight: 400;
+    opacity: 0.85;
+    letter-spacing: 0.5px;
+    line-height: 1;
+}
+
+.brand-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1;
 }
 
 .nav-link {
