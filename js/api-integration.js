@@ -1,332 +1,327 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>레시피 목록 - 마이레시피</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="css/style.css" rel="stylesheet">
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="index.html">
-                <i class="fas fa-utensils me-2"></i>
-                <div class="brand-text">
-                    <div class="brand-subtitle">건강한 한끼</div>
-                    <div class="brand-title">마이레시피</div>
-                </div>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.html"><i class="fas fa-home me-1"></i>홈</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="recipes.html"><i class="fas fa-book me-1"></i>레시피</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="about.html"><i class="fas fa-info-circle me-1"></i>소개</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="container mt-4">
-        <!-- Page Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <h1 class="display-4 text-center mb-3">
-                    <i class="fas fa-book-open text-primary me-3"></i>레시피 목록
-                </h1>
-                <p class="lead text-center text-muted">다양한 맛있는 레시피를 찾아보세요</p>
-            </div>
-        </div>
-
-        <!-- Category Filter -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="fas fa-filter text-primary me-2"></i>카테고리별 보기
-                        </h5>
-                        <div class="btn-group flex-wrap" role="group">
-                            <button type="button" class="btn btn-outline-primary category-btn active" data-category="모두보기">
-                                <i class="fas fa-th-large me-1"></i>모두보기
-                            </button>
-                            <button type="button" class="btn btn-outline-primary category-btn" data-category="밥">
-                                <i class="fas fa-bowl-food me-1"></i>밥
-                            </button>
-                            <button type="button" class="btn btn-outline-primary category-btn" data-category="국&찌개">
-                                <i class="fas fa-utensils me-1"></i>국&찌개
-                            </button>
-                            <button type="button" class="btn btn-outline-primary category-btn" data-category="반찬">
-                                <i class="fas fa-leaf me-1"></i>반찬
-                            </button>
-                            <button type="button" class="btn btn-outline-primary category-btn" data-category="일품">
-                                <i class="fas fa-plate-wheat me-1"></i>일품
-                            </button>
-                            <button type="button" class="btn btn-outline-primary category-btn" data-category="후식">
-                                <i class="fas fa-ice-cream me-1"></i>후식
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recipe Count -->
-        <div class="row mb-3">
-            <div class="col-12">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <span id="recipeCount">레시피를 불러오는 중...</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recipe Grid -->
-        <div class="row" id="recipeList">
-            <div class="col-12 text-center">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">로딩 중...</span>
-                </div>
-                <p class="mt-3 text-muted">레시피를 불러오는 중...</p>
-            </div>
-        </div>
-
-        <!-- Load More Button -->
-        <div class="row mt-4">
-            <div class="col-12 text-center">
-                <button class="btn btn-primary btn-lg" id="loadMoreBtn" style="display: none;">
-                    <i class="fas fa-plus me-2"></i>더 많은 레시피 보기
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="bg-dark text-light py-4 mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>
-                        <i class="fas fa-utensils me-2"></i>마이레시피
-                    </h5>
-                    <p class="mb-0">모든 사람이 쉽게 따라할 수 있는 맛있는 레시피를 제공합니다.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <p class="mb-0">© 2025 MyRecipeNote. All rights reserved.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Custom Scripts -->
-    <script src="js/main.js"></script>
-    <script src="js/api-integration.js"></script>
-
-    <!-- Page-specific Script -->
-    <script>
-    $(document).ready(function() {
-        console.log("🚀 recipes.html 페이지 로드 시작...");
+// 조리식품 레시피 DB API 연동 (목업 데이터 제거됨)
+class RecipeAPIManager {
+    constructor() {
+        this.apiKey = "fee0a951c8d7426aa79e"; // 공공데이터포털 API 키
         
-        // 현재 카테고리 상태
-        let currentCategory = '모두보기';
-        let displayedRecipes = 12; // 처음에 12개만 표시
-        let allRecipesData = [];
+        // 프록시 서버 URL (로컬 Python 서버)
+        this.proxyUrl = "http://localhost:5000/api/recipes";
+        this.proxyUrlAll = "http://localhost:5000/api/recipes/all";
         
-        // 레시피 로드 함수
-        async function loadRecipes() {
-            try {
-                console.log("📥 레시피 데이터 로드 시작...");
-                
-                // API 연동 레시피 로드
-                if (typeof recipeAPIManager !== 'undefined') {
-                    const recipes = await recipeAPIManager.getCombinedRecipes();
-                    allRecipesData = recipes;
-                    console.log(`✅ ${recipes.length}개 레시피 로드 완료`);
-                } else {
-                    console.error("❌ recipeAPIManager가 정의되지 않음");
-                    return;
-                }
-                
-                // 카테고리 버튼 표시 (실제 데이터 기반)
-                displayCategories();
-                
-                // 레시피 개수 표시
-                updateRecipeCount();
-                
-                // 레시피 표시
-                displayRecipes();
-                
-            } catch (error) {
-                console.error("❌ 레시피 로드 실패:", error);
-                $('#recipeList').html(`
-                    <div class="col-12 text-center">
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            레시피를 불러오는데 실패했습니다. 페이지를 새로고침해주세요.
-                        </div>
-                    </div>
-                `);
+        this.cache = new Map(); // API 응답 캐시
+        this.cacheTimeout = 5 * 60 * 1000; // 5분 캐시
+        
+        // 로컬 저장소 키들
+        this.localStorageKeys = {
+            apiRecipes: 'api_recipes_local',
+            lastUpdate: 'api_recipes_last_update',
+            totalCount: 'api_recipes_total_count'
+        };
+    }
+
+    // API에서 레시피 목록 가져오기 (프록시 서버 사용)
+    async fetchRecipesFromAPI(pageSize = 20) {
+        try {
+            console.log("🔍 조리식품 레시피 DB API에서 레시피 조회 중...");
+            
+            const response = await fetch(`${this.proxyUrl}?pageSize=${pageSize}&pageNo=1`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
+            
+            const data = await response.json();
+            
+            if (data.COOKRCP01 && data.COOKRCP01.row && data.COOKRCP01.row.length > 0) {
+                const recipes = data.COOKRCP01.row.map(item => this.formatRecipeData(item));
+                
+                // 캐시에 저장
+                this.cache.set('api_recipes', {
+                    data: recipes,
+                    timestamp: Date.now()
+                });
+                
+                console.log(`✅ API에서 ${recipes.length}개 레시피 조회 완료`);
+                return recipes;
+            } else {
+                console.warn("⚠️ API 응답 형식이 예상과 다름");
+                return [];
+            }
+            
+        } catch (error) {
+            console.error("❌ API 레시피 조회 실패:", error);
+            return [];
         }
-        
-        // 실제 레시피 데이터 기반으로 카테고리 개수 계산
-        function calculateCategoryCounts() {
-            const categoryCounts = {
-                "밥": 0,
-                "국&찌개": 0,
-                "반찬": 0,
-                "일품": 0,
-                "후식": 0
+    }
+
+    // API 레시피를 로컬 저장소에 저장
+    saveAPIRecipesToLocal(recipes) {
+        try {
+            const data = {
+                recipes: recipes,
+                timestamp: Date.now(),
+                count: recipes.length,
+                source: 'API'
             };
             
-            // 모든 레시피를 순회하면서 카테고리별 개수 계산
-            allRecipesData.forEach(recipe => {
-                if (recipe.category && categoryCounts.hasOwnProperty(recipe.category)) {
-                    categoryCounts[recipe.category]++;
-                }
-            });
+            localStorage.setItem(this.localStorageKeys.apiRecipes, JSON.stringify(data));
+            localStorage.setItem(this.localStorageKeys.lastUpdate, new Date().toLocaleString());
+            localStorage.setItem(this.localStorageKeys.totalCount, recipes.length.toString());
             
-            console.log('📊 실제 카테고리별 레시피 개수:', categoryCounts);
-            return categoryCounts;
+            console.log(`💾 API 레시피 ${recipes.length}개를 로컬 저장소에 저장했습니다.`);
+        } catch (error) {
+            console.error("❌ 로컬 저장소 저장 실패:", error);
         }
+    }
 
-        // 카테고리 버튼 표시
-        function displayCategories() {
-            if ($('#categoryButtons').length) {
-                const totalCount = allRecipesData.length;
-                let html = `<a href="recipes.html" class="btn category-btn active">모두보기 (${totalCount})</a>`;
-                
-                // 실제 레시피 데이터 기반으로 카테고리 개수 계산
-                const categoryCounts = calculateCategoryCounts();
-                
-                for (let category in categoryCounts) {
-                    const count = categoryCounts[category];
-                    html += `<a href="recipes.html?category=${encodeURIComponent(category)}" class="btn category-btn">
-                        ${category} (${count})
-                    </a>`;
-                }
-                
-                $('#categoryButtons').html(html);
+    // 로컬 저장소에서 API 레시피 로드
+    loadAPIRecipesFromLocal() {
+        try {
+            const data = localStorage.getItem(this.localStorageKeys.apiRecipes);
+            if (data) {
+                const parsedData = JSON.parse(data);
+                return parsedData.recipes || [];
             }
+        } catch (error) {
+            console.warn("⚠️ 로컬 저장소에서 API 레시피 로드 실패:", error);
         }
+        return [];
+    }
 
-        // 레시피 개수 업데이트
-        function updateRecipeCount() {
-            const totalCount = allRecipesData.length;
-            const currentCount = getCurrentRecipes().length;
+    // 대량 API 레시피 다운로드 (프록시 서버 사용 - 1000개)
+    async downloadAllAPIRecipes() {
+        console.log("📥 프록시 서버를 통한 전체 레시피 다운로드 시작...");
+        console.log("⚠️ 프록시 서버가 실행 중이어야 합니다!");
+        
+        try {
+            // 프록시 서버의 /api/recipes/all 엔드포인트 사용
+            console.log(`🌐 프록시 서버 호출: ${this.proxyUrlAll}`);
             
-            if (currentCategory === '모두보기') {
-                $('#recipeCount').html(`총 <strong>${totalCount}</strong>개의 레시피가 있습니다.`);
+            const response = await fetch(this.proxyUrlAll);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.recipes && data.recipes.length > 0) {
+                const recipes = data.recipes.map(item => this.formatRecipeData(item));
+                
+                console.log(`✅ API에서 ${recipes.length}개 실제 레시피 다운로드 완료`);
+                
+                // 로컬 저장소에 저장
+                this.saveAPIRecipesToLocal(recipes);
+                
+                // 캐시에도 저장
+                this.cache.set('api_recipes', {
+                    data: recipes,
+                    timestamp: Date.now()
+                });
+                
+                console.log(`🎉 전체 다운로드 완료: ${recipes.length}개 레시피`);
+                console.log(`💾 로컬 저장소에 저장 완료`);
+                
+                return recipes;
             } else {
-                $('#recipeCount').html(`<strong>${currentCategory}</strong> 카테고리에 <strong>${currentCount}</strong>개의 레시피가 있습니다.`);
+                console.error("❌ API 응답에 레시피 데이터가 없습니다.");
+                console.log("💡 프록시 서버를 확인하세요: python api_proxy_server.py");
+                return [];
             }
+            
+        } catch (error) {
+            console.error("❌ 전체 레시피 다운로드 실패:", error.message);
+            console.log("");
+            console.log("🔧 프록시 서버 실행 방법:");
+            console.log("1. 새 터미널 열기");
+            console.log("2. 명령어 실행: python api_proxy_server.py");
+            console.log("3. 서버가 실행되면 다시 시도");
+            console.log("");
+            return [];
         }
-        
-        // 현재 카테고리에 맞는 레시피 가져오기
-        function getCurrentRecipes() {
-            if (currentCategory === '모두보기') {
-                return allRecipesData;
-            }
-            return allRecipesData.filter(recipe => recipe.category === currentCategory);
-        }
-        
-        // 레시피 표시
-        function displayRecipes() {
-            const recipes = getCurrentRecipes();
-            const recipesToShow = recipes.slice(0, displayedRecipes);
+    }
+
+    // 로컬 저장소 기반 레시피 통합 (스케줄러 없음)
+    async getCombinedRecipes(localRecipes = [], apiPageSize = 100) {
+        try {
+            console.log("📂 로컬 저장소에서 레시피 로드 (스케줄러 없음)");
             
-            if (recipesToShow.length === 0) {
-                $('#recipeList').html(`
-                    <div class="col-12 text-center">
-                        <div class="alert alert-warning">
-                            <i class="fas fa-search me-2"></i>
-                            해당 카테고리에 레시피가 없습니다.
-                        </div>
-                    </div>
-                `);
-                return;
-            }
+            // 로컬 저장소에서만 데이터 가져오기
+            const localApiRecipes = this.loadAPIRecipesFromLocal();
             
-            let html = '';
-            recipesToShow.forEach(recipe => {
-                html += `
-                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                        <div class="card h-100 recipe-card" data-category="${recipe.category}">
-                            <img src="${recipe.image_main}" class="card-img-top" alt="${recipe.name}" style="height: 200px; object-fit: cover;">
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">${recipe.name}</h5>
-                                <p class="card-text text-muted">
-                                    <i class="fas fa-clock me-1"></i>${recipe.cooking_time}
-                                    <span class="ms-2"><i class="fas fa-users me-1"></i>${recipe.servings}</span>
-                                </p>
-                                <p class="card-text">
-                                    <span class="badge bg-primary">${recipe.category}</span>
-                                    <span class="badge bg-secondary ms-1">${recipe.difficulty}</span>
-                                </p>
-                                <div class="mt-auto">
-                                    <a href="recipe_detail.html?id=${recipe.id}" class="btn btn-primary btn-sm w-100">
-                                        <i class="fas fa-eye me-1"></i>자세히 보기
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            $('#recipeList').html(html);
-            
-            // 더보기 버튼 표시/숨김
-            if (recipes.length > displayedRecipes) {
-                $('#loadMoreBtn').show();
+            if (localApiRecipes.length > 0) {
+                console.log(`✅ 로컬 저장소에서 ${localApiRecipes.length}개 API 레시피 로드`);
+                
+                // 중복 제거
+                const localRecipeNames = new Set(localRecipes.map(r => r.name));
+                const uniqueApiRecipes = localApiRecipes.filter(r => !localRecipeNames.has(r.name));
+                
+                // 모든 API 레시피 반환 (스케줄러 없음)
+                const allRecipes = [...localRecipes, ...uniqueApiRecipes];
+                console.log(`🎯 총 ${allRecipes.length}개 레시피 반환 (스케줄러 없음)`);
+                
+                return allRecipes;
             } else {
-                $('#loadMoreBtn').hide();
+                console.log("⚠️ 로컬 저장소에 API 레시피가 없습니다.");
+                console.log("💡 'testSchedule.downloadAll()' 명령으로 먼저 다운로드하세요.");
+                
+                return localRecipes;
+            }
+            
+        } catch (error) {
+            console.error("❌ 레시피 통합 실패:", error);
+            return localRecipes; // 실패시 로컬 데이터만 반환
+        }
+    }
+
+    // 로컬 저장소 상태 확인 (API 연결 없음)
+    checkAPIStatus() {
+        const localRecipes = this.loadAPIRecipesFromLocal();
+        const hasLocalData = localRecipes.length > 0;
+        
+        if (hasLocalData) {
+            const lastUpdate = localStorage.getItem(this.localStorageKeys.lastUpdate);
+            console.log(`📦 로컬 저장소 상태: ${localRecipes.length}개 레시피 저장됨 (${lastUpdate})`);
+            return {
+                connected: true,
+                message: `로컬 저장소에서 레시피 로드됨 (${localRecipes.length}개)`,
+                count: localRecipes.length,
+                lastUpdate: lastUpdate
+            };
+        } else {
+            console.log("📦 로컬 저장소 상태: 데이터 없음");
+            return {
+                connected: false,
+                message: "로컬 저장소에 데이터 없음",
+                count: 0,
+                lastUpdate: null
+            };
+        }
+    }
+
+    // 레시피 데이터 포맷팅 (조리식품 레시피 DB API용)
+    formatRecipeData(item) {
+        // 이미지 URL 처리 (HTTPS 우선, 없으면 기본 이미지)
+        let imageUrl = item.ATT_FILE_NO_MK || "https://picsum.photos/400/200?random=1";
+        
+        // HTTP URL을 HTTPS로 변환 (Mixed Content 방지)
+        if (imageUrl && imageUrl.startsWith('http://')) {
+            imageUrl = imageUrl.replace('http://', 'https://');
+        }
+        
+        // URL이 유효하지 않으면 기본 이미지 사용
+        if (!imageUrl || imageUrl === 'null' || imageUrl === 'undefined') {
+            imageUrl = "https://picsum.photos/400/200?random=1";
+        }
+        
+        return {
+            id: `api_${item.RCP_SEQ || Date.now()}`,
+            name: item.RCP_NM || "레시피명 없음",
+            category: item.RCP_PAT2 || "기타",
+            cooking_time: item.INFO_ENG || "30분",
+            difficulty: item.RCP_PAT3 || "초급",
+            servings: item.INFO_WGT || "2인분",
+            ingredients: item.RCP_PARTS_DTLS ? item.RCP_PARTS_DTLS.split(',') : [],
+            cooking_steps: this.parseCookingSteps(item),
+            tips: item.RCP_TIPS || "",
+            image_main: imageUrl,
+            source: "조리식품 레시피 DB",
+            nutrition: {
+                calories: item.INFO_CAR || "정보 없음",
+                protein: item.INFO_PRO || "정보 없음",
+                fat: item.INFO_FAT || "정보 없음"
+            }
+        };
+    }
+
+    // 조리 과정 파싱 (조리식품 레시피 DB API용)
+    parseCookingSteps(item) {
+        const steps = [];
+        
+        // MANUAL01~MANUAL20 필드에서 조리 과정 추출
+        for (let i = 1; i <= 20; i++) {
+            const manualField = `MANUAL${i.toString().padStart(2, '0')}`;
+            const imgField = `MANUAL_IMG${i.toString().padStart(2, '0')}`;
+            
+            if (item[manualField] && item[manualField].trim()) {
+                steps.push({
+                    step: i,
+                    text: item[manualField].trim(),
+                    image: item[imgField] || null
+                });
             }
         }
         
-        // 카테고리 버튼 클릭 이벤트
-        $('.category-btn').click(function() {
-            $('.category-btn').removeClass('active');
-            $(this).addClass('active');
-            
-            currentCategory = $(this).data('category');
-            displayedRecipes = 12; // 리셋
-            
-            console.log(`📂 카테고리 변경: ${currentCategory}`);
-            
-            updateRecipeCount();
-            displayRecipes();
-        });
+        return steps.length > 0 ? steps : [
+            { step: 1, text: "상세 조리 과정은 레시피 상세 페이지에서 확인하세요.", image: null }
+        ];
+    }
+}
+
+// 전역 인스턴스 생성
+const recipeAPIManager = new RecipeAPIManager();
+
+// 개발자 콘솔용 도구들
+window.testSchedule = {
+    // 스케줄 리셋
+    reset: function() {
+        localStorage.removeItem('recipe_schedule_displayed_ids');
+        localStorage.removeItem('recipe_schedule_last_update');
+        localStorage.removeItem('recipe_schedule_total_count');
+        console.log("🔄 스케줄 리셋 완료");
+    },
+    
+    // 로컬 저장소 상태 확인
+    checkLocalStorage: function() {
+        const apiData = localStorage.getItem('api_recipes_local');
+        const lastUpdate = localStorage.getItem('api_recipes_last_update');
+        const totalCount = localStorage.getItem('api_recipes_total_count');
         
-        // 더보기 버튼 클릭 이벤트
-        $('#loadMoreBtn').click(function() {
-            displayedRecipes += 12;
-            displayRecipes();
-        });
+        let recipes = [];
+        if (apiData) {
+            try {
+                const parsed = JSON.parse(apiData);
+                recipes = parsed.recipes || [];
+            } catch (e) {
+                console.error("로컬 저장소 데이터 파싱 오류:", e);
+            }
+        }
         
-        // 초기 레시피 로드
-        loadRecipes();
-    });
-    </script>
-</body>
-</html>
+        const result = {
+            storedRecipes: recipes.length,
+            totalCount: totalCount || '없음',
+            lastUpdate: lastUpdate || '없음'
+        };
+        
+        console.log("💾 로컬 저장소 상태:", result);
+        console.log({ count: recipes.length, lastUpdate: lastUpdate, recipes: recipes });
+        
+        return result;
+    },
+    
+    // 로컬 저장소 초기화
+    clearLocalStorage: function() {
+        localStorage.removeItem('api_recipes_local');
+        localStorage.removeItem('api_recipes_last_update');
+        localStorage.removeItem('api_recipes_total_count');
+        localStorage.removeItem('recipe_schedule_displayed_ids');
+        localStorage.removeItem('recipe_schedule_last_update');
+        localStorage.removeItem('recipe_schedule_total_count');
+        console.log("🗑️ 로컬 저장소 초기화 완료");
+    },
+    
+    // 전체 API 레시피 다운로드
+    downloadAll: async function() {
+        console.log("📥 전체 API 레시피 다운로드 시작...");
+        try {
+            const recipes = await recipeAPIManager.downloadAllAPIRecipes();
+            console.log(`✅ 다운로드 완료: ${recipes.length}개 레시피`);
+            
+            console.log("🔄 페이지를 새로고침하여 새 데이터를 반영합니다...");
+            setTimeout(() => window.location.reload(), 2000);
+            
+            return recipes;
+        } catch (error) {
+            console.error("❌ 다운로드 실패:", error);
+        }
+    }
+};
