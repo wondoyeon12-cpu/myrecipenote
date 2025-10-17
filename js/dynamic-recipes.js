@@ -186,8 +186,15 @@ async function loadRecipesWithDynamic() {
         }
     }
     
-    // 관리 UI 추가
-    addRecipeManagementUI();
+    // 카테고리 버튼 업데이트 (실제 데이터 기반)
+    if (typeof displayCategories === 'function') {
+        displayCategories();
+    } else {
+        console.warn('⚠️ displayCategories 함수가 정의되지 않음');
+    }
+    
+    // 더보기 버튼 추가
+    addLoadMoreButton();
 }
 
 // 직접 인기 레시피 표시 함수 (main.js 함수가 없을 때 사용)
@@ -231,40 +238,51 @@ function createRecipeCardDirectly(recipe) {
     `;
 }
 
-// 레시피 관리 UI 추가
-function addRecipeManagementUI() {
-    const managementUI = `
-        <div class="recipe-management-panel mt-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5><i class="fas fa-plus-circle"></i> 레시피 관리</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <button class="btn btn-success btn-sm mb-2" onclick="showAddRecipeModal()">
-                                <i class="fas fa-plus"></i> 새 레시피 추가
-                            </button>
-                            <button class="btn btn-info btn-sm mb-2" onclick="generateSampleRecipes()">
-                                <i class="fas fa-magic"></i> 샘플 레시피 생성
-                            </button>
-                        </div>
-                        <div class="col-md-6 text-end">
-                            <small class="text-muted">
-                                총 ${allRecipes.length}개 레시피 
-                                (동적: ${dynamicRecipeManager.getAllDynamicRecipes().length}개)
-                            </small>
-                        </div>
-                    </div>
-                </div>
+// 더보기 버튼 추가
+function addLoadMoreButton() {
+    // 기존 더보기 버튼이 없으면 추가
+    if (!$('#loadMoreButton').length) {
+        const loadMoreHtml = `
+            <div class="text-center mt-4" id="loadMoreButton">
+                <button class="btn btn-primary btn-lg" onclick="loadMoreRecipes()">
+                    <i class="fas fa-plus"></i> 더보기
+                </button>
             </div>
-        </div>
-    `;
-    
-    // 기존 관리 UI가 없으면 추가
-    if (!$('.recipe-management-panel').length) {
-        $('#popularRecipes').after(managementUI);
+        `;
+        $('#popularRecipes').after(loadMoreHtml);
     }
+}
+
+// 더보기 버튼 클릭 시 레시피 추가 로드
+function loadMoreRecipes() {
+    // 현재 표시된 레시피 개수 확인
+    const currentCount = $('#popularRecipes .col-lg-3').length;
+    const totalCount = allRecipes.length;
+    
+    if (currentCount >= totalCount) {
+        // 더 이상 표시할 레시피가 없으면 버튼 숨기기
+        $('#loadMoreButton').hide();
+        return;
+    }
+    
+    // 다음 8개 레시피 가져오기
+    const nextRecipes = allRecipes.slice(currentCount, currentCount + 8);
+    
+    // 기존 레시피에 추가
+    let html = '';
+    nextRecipes.forEach(recipe => {
+        html += createRecipeCardDirectly(recipe);
+    });
+    
+    $('#popularRecipes').append(html);
+    
+    // 전체 레시피를 다 표시했으면 버튼 숨기기
+    const newCount = $('#popularRecipes .col-lg-3').length;
+    if (newCount >= totalCount) {
+        $('#loadMoreButton').hide();
+    }
+    
+    console.log(`✅ 더보기: ${nextRecipes.length}개 레시피 추가 (총 ${newCount}/${totalCount}개)`);
 }
 
 // 새 레시피 추가 모달 표시
