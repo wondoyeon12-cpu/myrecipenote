@@ -204,7 +204,8 @@ function calculateCategoryCounts() {
 // 카테고리 버튼 표시
 function displayCategories() {
     if ($('#categoryButtons').length) {
-        let html = '<a href="recipes.html" class="btn category-btn active">모두보기</a>';
+        const totalCount = allRecipes.length;
+        let html = `<a href="recipes.html" class="btn category-btn active">모두보기 (${totalCount})</a>`;
         
         // 실제 레시피 데이터 기반으로 카테고리 개수 계산
         const categoryCounts = calculateCategoryCounts();
@@ -313,6 +314,9 @@ async function loadRecipesWithAPI() {
             if ($('#recipeList').length) {
                 displayAllRecipes();
             }
+            
+            // 카테고리 버튼 업데이트 (실제 데이터 기반)
+            displayCategories();
         } else {
             console.log("📦 로컬 저장소에 데이터 없음, 기존 데이터만 사용");
         }
