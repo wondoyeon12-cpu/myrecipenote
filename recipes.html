@@ -223,7 +223,7 @@
                 
                 for (let category in categoryCounts) {
                     const count = categoryCounts[category];
-                    html += `<a href="recipes.html?category=${encodeURIComponent(category)}" class="btn category-btn">
+                    html += `<a href="#" class="btn category-btn" data-category="${category}">
                         ${category} (${count})
                     </a>`;
                 }
