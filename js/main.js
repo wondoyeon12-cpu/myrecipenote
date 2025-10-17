@@ -212,13 +212,47 @@ function displayCategories() {
         
         for (let category in categoryCounts) {
             const count = categoryCounts[category];
-            html += `<a href="recipes.html?category=${encodeURIComponent(category)}" class="btn category-btn">
+            html += `<a href="#" class="btn category-btn" data-category="${category}">
                 ${category} (${count})
             </a>`;
         }
         
         $('#categoryButtons').html(html);
+        
+        // 카테고리 버튼 클릭 이벤트 추가 (메인 페이지에서만)
+        if ($('#popularRecipes').length) {
+            $('.category-btn').click(function(e) {
+                e.preventDefault();
+                const category = $(this).data('category');
+                filterRecipesByCategory(category);
+                
+                // 버튼 활성화 상태 변경
+                $('.category-btn').removeClass('active');
+                $(this).addClass('active');
+            });
+        }
     }
+}
+
+// 메인 페이지에서 카테고리별 레시피 필터링
+function filterRecipesByCategory(category) {
+    let filteredRecipes = allRecipes;
+    
+    if (category !== '모두보기') {
+        filteredRecipes = allRecipes.filter(recipe => recipe.category === category);
+    }
+    
+    // 인기 레시피 영역에 필터링된 결과 표시
+    const popularCount = Math.min(8, filteredRecipes.length);
+    const recipes = filteredRecipes.slice(0, popularCount);
+    
+    let html = '';
+    recipes.forEach(recipe => {
+        html += createRecipeCard(recipe);
+    });
+    
+    $('#popularRecipes').html(html);
+    console.log(`✅ ${category} 카테고리: ${recipes.length}개 레시피 표시`);
 }
 
 // 페이지네이션 표시
