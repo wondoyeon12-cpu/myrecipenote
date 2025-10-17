@@ -169,15 +169,66 @@ async function loadRecipesWithDynamic() {
     
     // UI 업데이트
     if ($('#popularRecipes').length) {
-        displayPopularRecipes();
+        if (typeof displayPopularRecipes === 'function') {
+            displayPopularRecipes();
+        } else {
+            console.warn('⚠️ displayPopularRecipes 함수가 정의되지 않음');
+            // 직접 인기 레시피 표시
+            displayPopularRecipesDirectly();
+        }
     }
     
     if ($('#recipeList').length) {
-        displayAllRecipes();
+        if (typeof displayAllRecipes === 'function') {
+            displayAllRecipes();
+        } else {
+            console.warn('⚠️ displayAllRecipes 함수가 정의되지 않음');
+        }
     }
     
     // 관리 UI 추가
     addRecipeManagementUI();
+}
+
+// 직접 인기 레시피 표시 함수 (main.js 함수가 없을 때 사용)
+function displayPopularRecipesDirectly() {
+    const popularCount = 8;
+    const recipes = allRecipes.slice(0, popularCount);
+    
+    let html = '';
+    recipes.forEach(recipe => {
+        html += createRecipeCardDirectly(recipe);
+    });
+    
+    $('#popularRecipes').html(html);
+    console.log(`✅ ${recipes.length}개 인기 레시피 직접 표시 완료`);
+}
+
+// 직접 레시피 카드 생성 함수
+function createRecipeCardDirectly(recipe) {
+    return `
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div class="card h-100 recipe-card" data-category="${recipe.category}">
+                <img src="${recipe.image_main}" class="card-img-top" alt="${recipe.name}" style="height: 200px; object-fit: cover;">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">${recipe.name}</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-clock me-1"></i>${recipe.cooking_time}
+                        <span class="ms-2"><i class="fas fa-users me-1"></i>${recipe.servings}</span>
+                    </p>
+                    <p class="card-text">
+                        <span class="badge bg-primary">${recipe.category}</span>
+                        <span class="badge bg-secondary ms-1">${recipe.difficulty}</span>
+                    </p>
+                    <div class="mt-auto">
+                        <a href="recipe_detail.html?id=${recipe.id}" class="btn btn-primary btn-sm w-100">
+                            <i class="fas fa-eye me-1"></i>자세히 보기
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // 레시피 관리 UI 추가
