@@ -73,13 +73,28 @@ class RecipeAPIManager {
         }
     }
 
-    // 로컬 저장소에서 API 레시피 로드
+    // 로컬 저장소에서 API 레시피 로드 (HTTPS 변환 포함)
     loadAPIRecipesFromLocal() {
         try {
             const data = localStorage.getItem(this.localStorageKeys.apiRecipes);
             if (data) {
                 const parsedData = JSON.parse(data);
-                return parsedData.recipes || [];
+                const recipes = parsedData.recipes || [];
+                
+                // 기존 저장된 레시피들의 이미지 URL을 HTTPS로 변환
+                const updatedRecipes = recipes.map(recipe => {
+                    if (recipe.image_main && recipe.image_main.startsWith('http://')) {
+                        recipe.image_main = recipe.image_main.replace('http://', 'https://');
+                        console.log(`🔒 이미지 URL HTTPS 변환: ${recipe.name}`);
+                    }
+                    return recipe;
+                });
+                
+                // 변환된 레시피들을 다시 로컬 저장소에 저장
+                this.saveAPIRecipesToLocal(updatedRecipes);
+                console.log(`💾 HTTPS 변환된 레시피들을 로컬 저장소에 업데이트했습니다.`);
+                
+                return updatedRecipes;
             }
         } catch (error) {
             console.warn("⚠️ 로컬 저장소에서 API 레시피 로드 실패:", error);
