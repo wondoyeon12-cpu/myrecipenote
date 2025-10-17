@@ -167,6 +167,9 @@
                     return;
                 }
                 
+                // 카테고리 버튼 표시 (실제 데이터 기반)
+                displayCategories();
+                
                 // 레시피 개수 표시
                 updateRecipeCount();
                 
@@ -186,6 +189,47 @@
             }
         }
         
+        // 실제 레시피 데이터 기반으로 카테고리 개수 계산
+        function calculateCategoryCounts() {
+            const categoryCounts = {
+                "밥": 0,
+                "국&찌개": 0,
+                "반찬": 0,
+                "일품": 0,
+                "후식": 0
+            };
+            
+            // 모든 레시피를 순회하면서 카테고리별 개수 계산
+            allRecipesData.forEach(recipe => {
+                if (recipe.category && categoryCounts.hasOwnProperty(recipe.category)) {
+                    categoryCounts[recipe.category]++;
+                }
+            });
+            
+            console.log('📊 실제 카테고리별 레시피 개수:', categoryCounts);
+            return categoryCounts;
+        }
+
+        // 카테고리 버튼 표시
+        function displayCategories() {
+            if ($('#categoryButtons').length) {
+                const totalCount = allRecipesData.length;
+                let html = `<a href="recipes.html" class="btn category-btn active">모두보기 (${totalCount})</a>`;
+                
+                // 실제 레시피 데이터 기반으로 카테고리 개수 계산
+                const categoryCounts = calculateCategoryCounts();
+                
+                for (let category in categoryCounts) {
+                    const count = categoryCounts[category];
+                    html += `<a href="recipes.html?category=${encodeURIComponent(category)}" class="btn category-btn">
+                        ${category} (${count})
+                    </a>`;
+                }
+                
+                $('#categoryButtons').html(html);
+            }
+        }
+
         // 레시피 개수 업데이트
         function updateRecipeCount() {
             const totalCount = allRecipesData.length;
