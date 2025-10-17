@@ -258,10 +258,16 @@ class RecipeAPIManager {
             const imgField = `MANUAL_IMG${i.toString().padStart(2, '0')}`;
             
             if (item[manualField] && item[manualField].trim()) {
+                // 조리순서 이미지 URL을 HTTPS로 변환
+                let stepImage = item[imgField] || null;
+                if (stepImage && stepImage.startsWith('http://')) {
+                    stepImage = stepImage.replace('http://', 'https://');
+                }
+                
                 steps.push({
                     step: i,
                     text: item[manualField].trim(),
-                    image: item[imgField] || null
+                    image: stepImage
                 });
             }
         }
