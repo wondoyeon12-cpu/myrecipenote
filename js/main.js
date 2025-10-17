@@ -67,51 +67,23 @@ async function loadAPIRecipes() {
     // API 호출 대신 로컬 데이터만 사용
 }
 
-// 카테고리 데이터 로드 (기본 카테고리 포함)
+// 카테고리 데이터 로드 (실제 레시피 데이터 기반으로 동적 계산)
 function loadCategories() {
-    const paths = [
-        'categories.json',
-        './categories.json',
-        '/categories.json',
-        '/myrecipenote/categories.json',
-        'data/categories.json',
-        './data/categories.json',
-        '/data/categories.json'
-    ];
+    console.log('📋 카테고리 로드 시작 (실제 데이터 기반)');
     
-    function tryLoadCategories(pathIndex) {
-        if (pathIndex >= paths.length) {
-            console.log('⚠️ 카테고리 파일을 찾을 수 없음, 기본 카테고리 사용');
-            // 기본 카테고리 설정
-            categories = {
-                "모두보기": { name: "모두보기", count: 0, color: "#ff6b35" },
-                "밥": { name: "밥", count: 0, color: "#f7931e" },
-                "국&찌개": { name: "국&찌개", count: 0, color: "#ffd23f" },
-                "반찬": { name: "반찬", count: 0, color: "#27ae60" },
-                "일품": { name: "일품", count: 0, color: "#3498db" },
-                "후식": { name: "후식", count: 0, color: "#9b59b6" }
-            };
-            console.log(`✅ ${Object.keys(categories).length}개 기본 카테고리 로드 완료`);
-            console.log('📋 카테고리:', Object.keys(categories));
-            displayCategories();
-            return;
-        }
-        
-        const path = paths[pathIndex];
-        console.log(`🔍 카테고리 시도 중: ${path}`);
-        
-        $.getJSON(path, function(data) {
-            categories = data;
-            console.log(`✅ ${Object.keys(categories).length}개 카테고리 로드 완료`);
-            console.log('📋 카테고리:', Object.keys(data));
-            displayCategories();
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.log(`❌ ${path} 로드 실패: ${textStatus}`);
-            tryLoadCategories(pathIndex + 1);
-        });
+    // 레시피 데이터가 로드된 후 카테고리 표시
+    if (allRecipes.length > 0) {
+        console.log(`✅ 레시피 ${allRecipes.length}개 로드 완료, 카테고리 표시 시작`);
+        displayCategories();
+    } else {
+        console.log('⏳ 레시피 데이터 로딩 중, 잠시 후 카테고리 표시');
+        // 레시피 로드 완료 후 카테고리 표시를 위해 setTimeout 사용
+        setTimeout(() => {
+            if (allRecipes.length > 0) {
+                displayCategories();
+            }
+        }, 1000);
     }
-    
-    tryLoadCategories(0);
 }
 
 // 인기 레시피 표시 (메인 페이지)
@@ -208,14 +180,39 @@ function createRecipeCard(recipe) {
     `;
 }
 
+// 실제 레시피 데이터 기반으로 카테고리 개수 계산
+function calculateCategoryCounts() {
+    const categoryCounts = {
+        "밥": 0,
+        "국&찌개": 0,
+        "반찬": 0,
+        "일품": 0,
+        "후식": 0
+    };
+    
+    // 모든 레시피를 순회하면서 카테고리별 개수 계산
+    allRecipes.forEach(recipe => {
+        if (recipe.category && categoryCounts.hasOwnProperty(recipe.category)) {
+            categoryCounts[recipe.category]++;
+        }
+    });
+    
+    console.log('📊 실제 카테고리별 레시피 개수:', categoryCounts);
+    return categoryCounts;
+}
+
 // 카테고리 버튼 표시
 function displayCategories() {
     if ($('#categoryButtons').length) {
         let html = '<a href="recipes.html" class="btn category-btn active">모두보기</a>';
         
-        for (let category in categories) {
+        // 실제 레시피 데이터 기반으로 카테고리 개수 계산
+        const categoryCounts = calculateCategoryCounts();
+        
+        for (let category in categoryCounts) {
+            const count = categoryCounts[category];
             html += `<a href="recipes.html?category=${encodeURIComponent(category)}" class="btn category-btn">
-                ${category} (${categories[category]})
+                ${category} (${count})
             </a>`;
         }
         
