@@ -101,7 +101,7 @@ function displayRecipeDetail(recipe) {
                     <img src="${recipe.image_large || recipe.image_main}" 
                          class="img-fluid rounded" 
                          alt="${recipe.name}"
-                         style="max-height: 400px; width: 100%; object-fit: cover;">
+                         style="max-height: 400px; object-fit: contain;">
                 </div>
                 ` : ''}
             </div>
@@ -181,7 +181,7 @@ function displayRecipeDetail(recipe) {
                         <h4 class="mb-0"><i class="fas fa-list-ol me-2"></i>조리순서</h4>
                     </div>
                     <div class="card-body">
-                        ${displayCookingSteps(recipe.steps)}
+                        ${displayCookingSteps(recipe.cooking_steps || recipe.steps)}
                     </div>
                 </div>
             </div>
@@ -280,7 +280,9 @@ async function loadRelatedRecipes(currentRecipe) {
                 html += `
                     <div class="col-md-3 mb-3">
                         <div class="card h-100 recipe-card" style="cursor: pointer;" onclick="window.location.href='recipe_detail.html?id=${recipe.id}'">
-                            <img src="${recipe.image_main}" class="card-img-top" alt="${recipe.name}" style="height: 150px; object-fit: cover;">
+                            <div style="height: 180px; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa;">
+                                <img src="${recipe.image_main}" class="card-img-top" alt="${recipe.name}" style="max-height: 180px; object-fit: contain; width: auto;">
+                            </div>
                             <div class="card-body d-flex flex-column">
                                 <h6 class="card-title">${recipe.name}</h6>
                                 <p class="card-text text-muted small">
@@ -362,7 +364,7 @@ function displayCookingSteps(steps) {
                         <img src="${step.image}" 
                              alt="조리 ${step.step}단계" 
                              class="img-fluid rounded"
-                             style="max-height: 200px; width: 100%; object-fit: cover;"
+                             style="max-height: 300px; object-fit: contain;"
                              onerror="this.style.display='none'">
                     </div>
                     ` : ''}
