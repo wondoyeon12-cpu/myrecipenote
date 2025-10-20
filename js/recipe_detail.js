@@ -97,7 +97,7 @@ function displayRecipeDetail(recipe) {
                 </div>
                 
                 ${recipe.image_large || recipe.image_main ? `
-                <div class="text-center">
+                <div class="text-start">
                     <img src="${recipe.image_large || recipe.image_main}" 
                          class="img-fluid rounded" 
                          alt="${recipe.name}"
@@ -280,7 +280,7 @@ async function loadRelatedRecipes(currentRecipe) {
                 html += `
                     <div class="col-md-3 mb-3">
                         <div class="card h-100 recipe-card" style="cursor: pointer;" onclick="window.location.href='recipe_detail.html?id=${recipe.id}'">
-                            <div style="height: 180px; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa;">
+                            <div style="height: 180px; overflow: hidden; display: flex; align-items: center; justify-content: flex-start; background-color: #f8f9fa;">
                                 <img src="${recipe.image_main}" class="card-img-top" alt="${recipe.name}" style="max-height: 180px; object-fit: contain; width: auto;">
                             </div>
                             <div class="card-body d-flex flex-column">
@@ -360,7 +360,7 @@ function displayCookingSteps(steps) {
                 </div>
                 <div class="card-body">
                     ${step.image ? `
-                    <div class="text-center mb-3">
+                    <div class="text-start mb-3">
                         <img src="${step.image}" 
                              alt="조리 ${step.step}단계" 
                              class="img-fluid rounded"
